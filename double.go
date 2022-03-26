@@ -1,4 +1,4 @@
-package decimal
+package mathx
 
 import (
 	"math"
@@ -21,7 +21,7 @@ var (
 
 // Double float by T.J. Dekker.
 //
-// See: T. J. Dekker, "A floating-point technique for extending the available precision", Numerische Mathematik 18 (3), 1971, 224-242. doi:10.1007/BF01397083
+// See: Dekker, T.J. A floating-point technique for extending the available precision. Numer. Math. 18, 224–242 (1971). https://doi.org/10.1007/BF01397083
 type Double struct{ hi, lo float64 }
 
 func DoubleFromFloat(x float64) Double  { return Double{hi: x, lo: 0.} }
@@ -30,7 +30,7 @@ func DoubleFromMul(a, b float64) Double { return twoProd(a, b) }
 func DoubleFromSqr(x float64) Double    { return oneSqr(x) }
 
 func (d Double) ToFloat64() float64  { return d.hi + d.lo }
-func (d Double) Equal(x Double) bool { return (d.hi == x.hi && d.lo == x.lo) }
+func (d Double) Equal(x Double) bool { return d.hi == x.hi && d.lo == x.lo }
 func (d Double) Add(x Double) Double { return add22(d, x) }
 func (d Double) Sub(x Double) Double { return sub22(d, x) }
 func (d Double) Mul(x Double) Double { return mul22(d, x) }
@@ -39,13 +39,13 @@ func (d Double) Abs() Double         { return absD(d) }
 func (d Double) Neg() Double         { return negD(d) }
 func (d Double) Inv() Double         { return inv2(d) }
 func (d Double) Sqr() Double         { return Sqr2(d) }
-func (d Double) GT(x Double) bool    { return (d.hi > x.hi || (d.hi == x.hi && d.lo > x.lo)) }
-func (d Double) LT(x Double) bool    { return (d.hi < x.hi || (d.hi == x.hi && d.lo < x.lo)) }
-func (d Double) GE(x Double) bool    { return (d.hi > x.hi || (d.hi == x.hi && d.lo >= x.lo)) }
-func (d Double) LE(x Double) bool    { return (d.hi < x.hi || (d.hi == x.hi && d.lo <= x.lo)) }
+func (d Double) GT(x Double) bool    { return d.hi > x.hi || (d.hi == x.hi && d.lo > x.lo) }
+func (d Double) LT(x Double) bool    { return d.hi < x.hi || (d.hi == x.hi && d.lo < x.lo) }
+func (d Double) GE(x Double) bool    { return d.hi > x.hi || (d.hi == x.hi && d.lo >= x.lo) }
+func (d Double) LE(x Double) bool    { return d.hi < x.hi || (d.hi == x.hi && d.lo <= x.lo) }
 
-func eq21(x Double, f float64) bool { return (x.hi == f && x.lo == 0.) }
-func le21(x Double, f float64) bool { return (x.hi < f || (x.hi == f && x.lo <= 0.)) }
+func eq21(x Double, f float64) bool { return x.hi == f && x.lo == 0. }
+func le21(x Double, f float64) bool { return x.hi < f || (x.hi == f && x.lo <= 0.) }
 
 // x ** 2
 func Sqr2(x Double) Double {
@@ -61,8 +61,8 @@ func Sqr2(x Double) Double {
 // x ** 0.5
 func Sqrt2(x Double) Double {
 	s := math.Sqrt(x.hi)
-	T := oneSqr(s)
-	e := (x.hi - T.hi - T.lo + x.lo) * 0.5 / s
+	t := oneSqr(s)
+	e := (x.hi - t.hi - t.lo + x.lo) * 0.5 / s
 	return Double{
 		hi: s + e,
 		lo: e - (x.hi - s),
