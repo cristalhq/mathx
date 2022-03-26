@@ -13,8 +13,8 @@ on:
 
 # See https://github.com/cristalhq/.github/.github/workflows
 jobs:
-  test:
-    uses: cristalhq/.github/.github/workflows/test.yml@main
+  build:
+    uses: cristalhq/.github/.github/workflows/build.yml@main
 
   release:
     if: github.event_name == 'workflow_dispatch'
