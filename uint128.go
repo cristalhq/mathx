@@ -26,7 +26,20 @@ func Uint128FromString(s string) (Uint128, error) {
 	return u, err
 }
 
-func (u Uint128) IsZero() bool { return u.hi|u.lo == 0 }
+func (u Uint128) Parts() (uint64, uint64) { return u.hi, u.lo }
+func (u Uint128) IsZero() bool            { return u.hi|u.lo == 0 }
+func (u Uint128) Equals(x Uint128) bool   { return u == x }
+
+func (u Uint128) Cmp(x Uint128) int {
+	switch {
+	case u == x:
+		return 0
+	case u.hi < x.hi || (u.hi == x.hi && u.lo < x.lo):
+		return -1
+	default:
+		return 1
+	}
+}
 
 func (u Uint128) Inc() Uint128 {
 	lo, carry := bits.Add64(u.lo, 1, 0)
@@ -38,54 +51,57 @@ func (u Uint128) Dec() Uint128 {
 	return Uint128{hi: u.hi - borrow, lo: lo}
 }
 
-func (u Uint128) Add(v Uint128) Uint128 {
-	lo, carry := bits.Add64(u.lo, v.lo, 0)
-	hi, _ := bits.Add64(u.hi, v.hi, carry)
+func (u Uint128) Add(x Uint128) Uint128 {
+	lo, carry := bits.Add64(u.lo, x.lo, 0)
+	hi, _ := bits.Add64(u.hi, x.hi, carry)
 	return Uint128{hi: hi, lo: lo}
 }
 
-func (u Uint128) And(x Uint128) Uint128 {
-	return Uint128{hi: u.hi & x.hi, lo: u.lo & x.lo}
+func (u Uint128) AddCarry(x Uint128, carry uint64) (Uint128, uint64) {
+	lo, c := bits.Add64(u.lo, x.lo, carry)
+	hi, c := bits.Add64(u.hi, x.hi, c)
+	return Uint128{hi: hi, lo: lo}, c
 }
 
-func (u Uint128) Xor(x Uint128) Uint128 {
-	return Uint128{hi: u.hi ^ x.hi, lo: u.lo ^ x.lo}
-}
-
-func (u Uint128) Or(x Uint128) Uint128 {
-	return Uint128{hi: u.hi | x.hi, lo: u.lo | x.lo}
-}
-
-func (u Uint128) Not() Uint128 {
-	return Uint128{hi: ^u.hi, lo: ^u.lo}
-}
-
-func (u Uint128) Equals(v Uint128) bool {
-	return u == v
-}
-
-func (u Uint128) Cmp(v Uint128) int {
-	switch {
-	case u == v:
-		return 0
-	case u.hi < v.hi || (u.hi == v.hi && u.lo < v.lo):
-		return -1
-	default:
-		return 1
-	}
-}
-
-func (u Uint128) Sub(v Uint128) Uint128 {
-	lo, borrow := bits.Sub64(u.lo, v.lo, 0)
-	hi, _ := bits.Sub64(u.hi, v.hi, borrow)
+func (u Uint128) Sub(x Uint128) Uint128 {
+	lo, borrow := bits.Sub64(u.lo, x.lo, 0)
+	hi, _ := bits.Sub64(u.hi, x.hi, borrow)
 	return Uint128{hi: hi, lo: lo}
 }
 
-func (u Uint128) Mul(v Uint128) Uint128 {
-	hi, lo := bits.Mul64(u.lo, v.lo)
-	hi += u.hi*v.lo + u.lo*v.hi
+func (u Uint128) SubBorrow(x Uint128, borrow uint64) (Uint128, uint64) {
+	lo, b := bits.Sub64(u.lo, x.lo, borrow)
+	hi, b := bits.Sub64(u.hi, x.hi, b)
+	return Uint128{hi: hi, lo: lo}, b
+}
+
+func (u Uint128) Mul(x Uint128) Uint128 {
+	hi, lo := bits.Mul64(u.lo, x.lo)
+	hi += u.hi*x.lo + u.lo*x.hi
 	return Uint128{hi: hi, lo: lo}
 }
+
+// multiply 128-bit unsigned integers and return high and lower product
+func (a Uint128) MulFull(b Uint128) (Uint128, Uint128) {
+	var lo, m1, m2, hi Uint128
+	lo.hi, lo.lo = bits.Mul64(a.lo, b.lo)
+	m1.hi, m1.lo = bits.Mul64(a.hi, b.lo)
+	m2.hi, m2.lo = bits.Mul64(a.lo, b.hi)
+	hi.hi, hi.lo = bits.Mul64(a.hi, b.hi)
+	var carry uint64
+	lo.hi, carry = bits.Add64(lo.hi, m1.lo, 0)
+	hi.lo, carry = bits.Add64(hi.lo, m1.hi, carry)
+	hi.hi, _ = bits.Add64(hi.hi, 0, carry)
+	lo.hi, carry = bits.Add64(lo.hi, m2.lo, 0)
+	hi.lo, carry = bits.Add64(hi.lo, m2.hi, carry)
+	hi.hi, _ = bits.Add64(hi.hi, 0, carry)
+	return hi, lo
+}
+
+func (u Uint128) And(x Uint128) Uint128 { return Uint128{hi: u.hi & x.hi, lo: u.lo & x.lo} }
+func (u Uint128) Xor(x Uint128) Uint128 { return Uint128{hi: u.hi ^ x.hi, lo: u.lo ^ x.lo} }
+func (u Uint128) Or(x Uint128) Uint128  { return Uint128{hi: u.hi | x.hi, lo: u.lo | x.lo} }
+func (u Uint128) Not() Uint128          { return Uint128{hi: ^u.hi, lo: ^u.lo} }
 
 func (u Uint128) Lsh(n uint) Uint128 {
 	if n > 64 {
