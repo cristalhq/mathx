@@ -11,7 +11,7 @@ func TestHistogramUnderflow(t *testing.T) {
 
 	q := h.Quantile(0.5)
 	if !math.IsNaN(q) {
-		t.Fatalf("unexpected quantile for empty histogram; got %v; want %v", q, nan)
+		t.Fatalf("unexpected quantile for empty histogram; got %v; want %v", q, NaN)
 	}
 
 	for i := 0; i < maxSamples; i++ {
@@ -53,7 +53,7 @@ func TestHistogramOverflow(t *testing.T) {
 
 	q := h.Quantile(NaN)
 	if !math.IsNaN(q) {
-		t.Fatalf("unexpected value for phi=NaN; got %v; want %v", q, nan)
+		t.Fatalf("unexpected value for phi=NaN; got %v; want %v", q, NaN)
 	}
 }
 
