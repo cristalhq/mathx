@@ -12,13 +12,8 @@ type Uint128 struct {
 	_      struct{}
 }
 
-func NewUint128(hi, lo uint64) Uint128 {
-	return Uint128{hi: hi, lo: lo}
-}
-
-func Uint128FromUint64(v uint64) Uint128 {
-	return NewUint128(0, v)
-}
+func NewUint128(hi, lo uint64) Uint128   { return Uint128{hi: hi, lo: lo} }
+func Uint128FromUint64(v uint64) Uint128 { return NewUint128(0, v) }
 
 func Uint128FromString(s string) (Uint128, error) {
 	var u Uint128
@@ -52,9 +47,8 @@ func (u Uint128) Dec() Uint128 {
 }
 
 func (u Uint128) Add(x Uint128) Uint128 {
-	lo, carry := bits.Add64(u.lo, x.lo, 0)
-	hi, _ := bits.Add64(u.hi, x.hi, carry)
-	return Uint128{hi: hi, lo: lo}
+	s, _ := u.AddCarry(x, 0)
+	return s
 }
 
 func (u Uint128) AddCarry(x Uint128, carry uint64) (Uint128, uint64) {
@@ -64,9 +58,8 @@ func (u Uint128) AddCarry(x Uint128, carry uint64) (Uint128, uint64) {
 }
 
 func (u Uint128) Sub(x Uint128) Uint128 {
-	lo, borrow := bits.Sub64(u.lo, x.lo, 0)
-	hi, _ := bits.Sub64(u.hi, x.hi, borrow)
-	return Uint128{hi: hi, lo: lo}
+	d, _ := u.SubBorrow(x, 0)
+	return d
 }
 
 func (u Uint128) SubBorrow(x Uint128, borrow uint64) (Uint128, uint64) {
@@ -81,7 +74,6 @@ func (u Uint128) Mul(x Uint128) Uint128 {
 	return Uint128{hi: hi, lo: lo}
 }
 
-// multiply 128-bit unsigned integers and return high and lower product
 func (a Uint128) MulFull(b Uint128) (Uint128, Uint128) {
 	var lo, m1, m2, hi Uint128
 	lo.hi, lo.lo = bits.Mul64(a.lo, b.lo)
